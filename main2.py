@@ -3,12 +3,13 @@ import base64
 import json
 from IPython.display import Image, display, clear_output
 import time
+import os
 
 url = "https://cae-bootstore.herokuapp.com/"
 
 endpoint_login = "/login"
 endpoint_user = "/user"
-endpoint_question ="/question"
+endpoint_question ="/question/all"
 
 
 def register_user(payload):
@@ -61,46 +62,99 @@ def login(email):
     return user
 
 def view_created():
-#Will use token, and return dict #See github
-    pass
+    os.system('cls')
+    while True:
+        questions = requests.get(url+endpoint_question)
+        question_number = 0
+        for question in questions.json()['questions']:
+            print(f'Question #{question_number+1}')
+            print(f"Question ID: {question['id']}")
+            print(f"Question: {question['question']}")
+            print(f"Answer: {question['answer']}\n")
+            question_number += 1
+        answer = input("Quit to quit: ")
+        if answer.lower().strip() == 'quit':
+            break
+        else:
+            print("Invalid input, please try again")
 
-def make_question():
+def make_question(token):
     question = input("Submit question: ")
     answer = input("Answer: ")
     admin_ques = {
         "question": question,
         "answer": answer
     }
-    payload_json_make = json.dump(admin_ques)
+    payload_json_make = json.dumps(admin_ques)
     #COME BACK TO                          <<<<<<<<---=====-------------------------------------------------------------
     response = requests.post(             #<<<<<----------------========================================================
-        url + endpoint_question
-        data = payload_json_make
-        headers = headers
+        url + endpoint_question,
+        data = payload_json_make,
+        #headers = headers
     )
 
     if response.ok:
         print("Question submitted")
     else: 
-        print("Submit error, retry, admin")
+        print("Submit error. retry, admin")
 
 def delete_question():
 #Uses token needs <id> of question   #See github  
     pass
-def edit_questions():
+
 # Will be a put request, uses token, needs <id> payload needed with dict answer #See github
 # similar to admin_ques = {
 #        "question": question,
 #        "answer": answer
 #    }
-    pass
+
+#def edit_questions(token, payload):
+    #payload_json_string = json.dumps(payload)
+    #headers={
+        #"Content-Type":"application/json",
+        #"Authorization":'Bearer ' + token
+    #}
+    #response = requests.put(
+        #url + endpoint_user,
+        #data = payload_json_string,
+        #headers = headers
+    #)
+    #return response.text
+
+#jims_edit_payload={
+    #"first_name":"Bill"
+#}
+
+#edit_user(jim['token'],jims_edit_payload)
+#pass
+
 def start_quizbowl():
-#Will utalize token and end point /question/all #See github
-    pass
+    total_correct = 0
+    question_number = 0
+    while question_number < 2:
+        os.system('cls')
+        questions = requests.get(url+endpoint_question)
+        print(questions.json()['questions'][question_number]["question"])
+        answer = input("Enter your answer: ")
+        if answer.lower().strip() == questions.json()['questions'][question_number]["answer"]:
+            total_correct += 1
+            os.system('cls')
+            print("That answer is correct! Congrats!")
+            time.sleep(2)
+        else:
+            os.system('cls')
+            print("Not even close, try again!")
+            time.sleep(2)
+        question_number += 1
+    os.system('cls')
+    print(f"The quiz is now complete, your total is {total_correct} out of 10")
+    time.sleep(2)
+    
+
 
 def main():
     while True:
-        clear_output()
+        os.system('cls')
         print("Welcome To the quizbowl!")
         email = input("Type your email to login or Type `register` to Register: ")
         if email.lower().strip() == 'register':
@@ -108,8 +162,10 @@ def main():
             if success_register:
                 print("You have successfully registered")
                 time.sleep(2)
+                os.system('cls')
                 continue
         elif email.lower().strip() == 'quit':
+            os.system('cls')
             print("Goodbye")
             break
         else:
@@ -130,24 +186,24 @@ Admin duties:
 5. Start quizbowl
              """)
         
-            duty = input("Select your duty, 1-4: ")
+            duty = input("Select your duty, 1-5: ")
             if duty == "1":
-                clear_output()
+                os.system('cls')
                 view_created()
                 time.sleep(1)
                 break
             elif duty == "2":
-                clear_output()
+                os.system('cls')
                 make_question()
             elif duty == "3":
-                clear_output()
+                os.system('cls')
                 delete_question()
                 break
             elif duty == "4":
-                clear_output()
-                edit_questions()
+                os.system('cls')
+                #edit_questions()
             elif duty == "5":
-                clear_output()
+                os.system('cls')
                 start_quizbowl() #shared function for user and admin!
             else:
                 print("Invalid Selection")
@@ -156,10 +212,11 @@ Admin duties:
         
         else:
             print("Welcome User")
-            user_response = input("Press ENTER to start quiz bowl!!!")
-            if user_response.lower() == "enter":
+            answer = input("Would you like to start the quiz or quit? 'start to start' or 'quit to quit': ")
+            if answer.lower().strip() == "quit":
+                break
+            elif answer.lower().strip() == "start":
                 start_quizbowl() #shared function for user and admin!
-            pass
 
 
 
